@@ -1,3 +1,5 @@
+package GameLogic;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -5,6 +7,8 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Tile implements Serializable {
+    public Type type;
+
     transient public BufferedImage img;
     private int width;
     private int height;
@@ -12,7 +16,7 @@ public class Tile implements Serializable {
     private int ypos;
 
 
-    public Tile(String path) {
+    public Tile(String path, Type type) {
         File imagebmp = new File(path);
         try {
             this.img = ImageIO.read(imagebmp);
@@ -20,13 +24,14 @@ public class Tile implements Serializable {
             e.printStackTrace();
             return;
         }
-
+        this.type = type;
         this.width = this.img.getWidth(null);
         this.height = this.img.getHeight(null);
     }
 
-    public Tile(BufferedImage image) {
+    public Tile(BufferedImage image, Type type) {
         this.img = image;
+        this.type = type;
         this.width = image.getWidth(null);
         this.height = image.getHeight(null);
     }
@@ -43,6 +48,12 @@ public class Tile implements Serializable {
             e.printStackTrace();
             return;
         }
+        this.width = img.getWidth();
+        this.height = img.getHeight();
+    }
+
+    public void changeType(Type type1){
+        this.type = type1;
     }
 
     public int getWidth(){ return width; }
@@ -56,6 +67,7 @@ public class Tile implements Serializable {
     public int getXpos(){ return xpos; }
 
     public int getYpos(){ return ypos; }
+
 
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();

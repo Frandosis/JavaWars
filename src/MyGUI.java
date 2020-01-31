@@ -3,12 +3,12 @@ import java.awt.*;
 
 
 public class MyGUI {
-JFrame frame = null;
-JPanel panel = null;
+JFrame frame;
+JPanel panel;
 
-public MyGUI(String title, String path){
+public MyGUI(String title){
     frame = new JFrame (title);
-    panel = new LevelEditor(path);
+    panel = new LevelEditor();
 
     frame.add(panel);
 }
@@ -19,27 +19,6 @@ public MyGUI(String title, String path){
         frame.pack();                       // saet vinduets stoerrelse
         frame.setVisible(true);                      // aabn vinduet
     }
-    /*
-    public void displayImage(String path){
-        File imagebmp = new File(path);
-
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(imagebmp);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        ImageIcon icon = new ImageIcon(image);
-        label = new JLabel(icon);
-        panel.add(label);
-    }
-    public void changeImage(String path){
-    if(label != null) panel.remove(label);
-    displayImage(path);
-    }
-    */
 
     public void closeFrame(){
         frame.dispose();
