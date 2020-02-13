@@ -13,11 +13,12 @@ public class LevelEditor extends javax.swing.JPanel {
  private int tileheight;
 
  private JMenuBar mb;
- private JMenuItem plains, forest, smountain, road;
+ private JMenuItem plains, forest, smountain, road, bridge, sea;
  private JMenuItem save, load, reset, setsize;
 
  private List<List<Tile>> tilegrid;
  private String imgFile;
+ private String curType;
 
  public LevelEditor() {
      tilewidth = 20;
@@ -34,6 +35,7 @@ public class LevelEditor extends javax.swing.JPanel {
     public void initComponents(){
 
         imgFile = "res/tiles/plains.png";
+        curType = "plains";
 
         setTiles();
 
@@ -45,6 +47,8 @@ public class LevelEditor extends javax.swing.JPanel {
         plains = new JMenuItem("Plains");
         smountain = new JMenuItem("Small Mountain");
         road = new JMenuItem("Road");
+        bridge = new JMenuItem("Bridge");
+        sea = new JMenuItem("Sea");
 
         save = new JMenuItem("Save level");
         load = new JMenuItem("Load level");
@@ -55,6 +59,8 @@ public class LevelEditor extends javax.swing.JPanel {
         plains.addActionListener( new MenuListener());
         smountain.addActionListener( new MenuListener());
         road.addActionListener(new MenuListener());
+        bridge.addActionListener(new MenuListener());
+        sea.addActionListener(new MenuListener());
 
         save.addActionListener(new MenuListener());
         load.addActionListener(new MenuListener());
@@ -65,6 +71,8 @@ public class LevelEditor extends javax.swing.JPanel {
         tiles.add(forest);
         tiles.add(smountain);
         tiles.add(road);
+        tiles.add(bridge);
+        tiles.add(sea);
 
         file.add(save);
         file.add(load);
@@ -90,7 +98,7 @@ public class LevelEditor extends javax.swing.JPanel {
         for(int y = 0; y < tileheight; y++){
             List<Tile> tilelist = new ArrayList<>();
             for (int x = 0; x < tilewidth; x++){
-                Tile tile = new Tile(imgFile, typeTranslater(imgFile));
+                Tile tile = new Tile(imgFile, typeTranslater());
                 tile.setXpos(x*tile.getWidth());
                 tile.setYpos(y*tile.getHeight());
                 tilelist.add(tile);
@@ -99,17 +107,31 @@ public class LevelEditor extends javax.swing.JPanel {
         }
     }
 
-    private Type typeTranslater(String path){
-        if(path.equals("res/tiles/plains.png")) return new Type("plains", 1, 0);
-        if(path.equals("res/tiles/forest.png")) return new Type("forest", 2, 1);
-        if(path.equals("res/tiles/smountain.png")) return new Type("mountain", 5, 3);
-        if(path.substring(path.length()-"road.png".length()).equals("road.png")) return new Type("road", 0, 0);
+    private Type typeTranslater(){
+        switch (curType){
+            case "plains":
+                return new Type("plains", 1, 0);
+            case "forest":
+                return new Type("forest", 2, 1);
+            case "mountain":
+                return new Type("mountain", 5, 3);
+            case "road":
+                return new Type("road", 0, 0);
+            case "bridge":
+                return new Type("bridge", 0, 0);
+            case "sea":
+                return new Type("sea", 0, 0);
+            default:
+                System.out.println("Error typetranslation type not supported");
+                break;
+        }
         return null;
     }
 
-    private void changeWithNeighbours(int x, int y, String type, boolean [][] checkmap){
+    private void changeWithNeighboursRoad(int x, int y, String type, boolean [][] checkmap){
         String path = "res/tiles/"+type+"/";
         String dir = "";
+        String s = "";
         //Recursion boundary checks.
         if(x < 0 || x >= tilewidth || y < 0 || y >= tileheight){
             return;
@@ -118,46 +140,157 @@ public class LevelEditor extends javax.swing.JPanel {
 
         // Check the neighbours.
         //Check upper neighbor
-        if(y-1 >= 0)
-            if (tilegrid.get(y - 1).get(x).type.getTypename().equals(type)) {
-                dir += "u";
-                if (!checkmap[y - 1][x]) changeWithNeighbours(x, y - 1, type, checkmap);
+        if(y-1 >= 0) {
+            s = tilegrid.get(y - 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "8";
+                if (!checkmap[y - 1][x] && s.equals(type)) changeWithNeighboursRoad(x, y - 1, type, checkmap);
             }
+        }
         //Check lower neighbor
-        if(y+1 < tileheight)
-            if (tilegrid.get(y+1).get(x).type.getTypename().equals(type)){
-                dir += "d";
-                if(!checkmap[y+1][x]) changeWithNeighbours(x, y+1, type, checkmap);
+        if(y+1 < tileheight) {
+            s = tilegrid.get(y + 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "2";
+                if (!checkmap[y + 1][x] && s.equals(type)) changeWithNeighboursRoad(x, y + 1, type, checkmap);
             }
+        }
         //Check left neighbor
-        if (x-1 >= 0)
-        if (tilegrid.get(y).get(x-1).type.getTypename().equals(type)){
-            dir += "l";
-            if(!checkmap[y][x-1]) changeWithNeighbours(x-1, y, type, checkmap);
+        if (x-1 >= 0) {
+            s = tilegrid.get(y).get(x - 1).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "4";
+                if (!checkmap[y][x - 1] && s.equals(type)) changeWithNeighboursRoad(x - 1, y, type, checkmap);
+            }
         }
         //Check right neighbor
-        if (x+1 < tilewidth)
-        if (tilegrid.get(y).get(x+1).type.getTypename().equals(type)){
-            dir += "r";
-            if (!checkmap[y][x+1]) changeWithNeighbours(x+1, y, type, checkmap);
+        if (x+1 < tilewidth) {
+            s = tilegrid.get(y).get(x + 1).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "6";
+                if (!checkmap[y][x + 1] && s.equals(type)) changeWithNeighboursRoad(x + 1, y, type, checkmap);
+            }
         }
 
-        System.out.println(dir);
+        switch(type){
+            case "road":
+                //Filter for horizontal tile
+                if( dir.equals("4") || dir.equals("6") || dir.equals("")){
+                    dir = "46";
+                }
 
-        //Filter for horizontal tile
-        if( dir.equals("l") || dir.equals("r") || dir.equals("")){
-            dir = "lr";
-        }
+                //Filter for vertical tile
+                if(dir.equals("8") || dir.equals("2")){
+                    dir = "82";
+                }
+                break;
 
-        //Filter for vertical tile
-        if(dir.equals("u") || dir.equals("d")){
-            dir = "ud";
+            case "bridge":
+                if(dir.equals("8") || dir.equals("2") || dir.equals("82")) dir = "82";
+                else dir = "46";
+                break;
+            default:
+                System.out.println("ChangeNeighbour: Error no valid type!");
+                break;
         }
 
         tilegrid.get(y).get(x).changeImage(path+dir+type+".png");
-        tilegrid.get(y).get(x).changeType(typeTranslater(path+dir+type+".png"));
+        tilegrid.get(y).get(x).changeType(typeTranslater());
 
     }
+    
+    private void changeWithNeighboursWater(int x, int y, String type, boolean [][] checkmap){
+        String path = "res/tiles/"+type+"/";
+        String dir = "";
+        String s = "";
+        String s1 = "";
+        String s2 = "";
+        //Recursion boundary checks.
+        if(x < 0 || x >= tilewidth || y < 0 || y >= tileheight){
+            return;
+        }
+        checkmap[y][x] = true;
+
+        // Check the neighbours.
+        //Check upper-left neighbor
+        if(y-1 >= 0 && x-1 >= 0){
+            s = tilegrid.get(y - 1).get(x-1).type.getTypename();
+            s1 = tilegrid.get(y).get(x-1).type.getTypename();
+            s2 = tilegrid.get(y - 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                //check connection
+                if( (s1.equals(type) || s1.equals("bridge")) && (s2.equals(type) || s2.equals("bridge")))
+                    dir += "7";
+            }
+        }
+        //Check upper neighbor
+        if(y-1 >= 0){
+            s = tilegrid.get(y - 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "8";
+                if (!checkmap[y - 1][x] && !s.equals("bridge")) changeWithNeighboursWater(x, y - 1, type, checkmap);
+            }
+        }
+        //Check upper-right neighbor
+        if(y-1 >= 0 && x+1 < tilewidth) {
+            s = tilegrid.get(y - 1).get(x + 1).type.getTypename();
+            s1 = tilegrid.get(y - 1).get(x).type.getTypename();
+            s2 = tilegrid.get(y).get(x + 1).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                if ((s1.equals(type) || s1.equals("bridge")) && (s2.equals(type) || s2.equals("bridge")))
+                    dir += "9";
+            }
+        }
+        //Check left neighbor
+        if (x-1 >= 0) {
+            s = tilegrid.get(y).get(x - 1).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "4";
+                if (!checkmap[y][x - 1] && !s.equals("bridge")) changeWithNeighboursWater(x - 1, y, type, checkmap);
+            }
+        }
+        //Check right neighbor
+        if (x+1 < tilewidth) {
+            s = tilegrid.get(y).get(x + 1).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "6";
+                if (!checkmap[y][x + 1] && !s.equals("bridge")) changeWithNeighboursWater(x + 1, y, type, checkmap);
+            }
+        }
+        //Check lower-left neighbor
+        if(y+1 < tileheight && x-1 >= 0) {
+            s = tilegrid.get(y + 1).get(x - 1).type.getTypename();
+            s1 = tilegrid.get(y).get(x - 1).type.getTypename();
+            s2 = tilegrid.get(y + 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                if ((s1.equals(type) || s1.equals("bridge")) && (s2.equals(type) || s2.equals("bridge")))
+                    dir += "1";
+            }
+        }
+        //Check lower neighbor
+        if(y+1 < tileheight) {
+            s = tilegrid.get(y + 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                dir += "2";
+                if (!checkmap[y + 1][x] && !s.equals("bridge")) changeWithNeighboursWater(x, y + 1, type, checkmap);
+            }
+        }
+        //Check lower-right neighbor
+        if(y+1 < tileheight && x+1 < tilewidth) {
+            s = tilegrid.get(y + 1).get(x + 1).type.getTypename();
+            s1 = tilegrid.get(y).get(x + 1).type.getTypename();
+            s2 = tilegrid.get(y + 1).get(x).type.getTypename();
+            if (s.equals(type) || s.equals("bridge")) {
+                if ((s1.equals(type) || s1.equals("bridge")) && (s2.equals(type) || s2.equals("bridge")))
+                    dir += "3";
+            }
+        }
+
+        System.out.println(dir);
+        tilegrid.get(y).get(x).changeImage(path+dir+type+".png");
+        tilegrid.get(y).get(x).changeType(typeTranslater());
+    }
+    
     public void paintComponent(Graphics g) {
         super.paintComponent(g); //Repaint background. Removes ghosting
         for(List<Tile> tilelist : tilegrid) {
@@ -183,12 +316,31 @@ public class LevelEditor extends javax.swing.JPanel {
                         && tile.getYpos() <= evt.getY()
                         && tile.getYpos() + tile.getHeight() > evt.getY()) {
                     System.out.println("changing image!");
-                    if (imgFile.substring(imgFile.length()-"road.png".length()).equals("road.png")){
-
-                        changeWithNeighbours(x, y, "road", checkmap);
-                    } else {
-                        tile.changeImage(imgFile);
-                        tile.changeType(typeTranslater(imgFile));
+                    switch (curType){
+                        case "forest":
+                            tile.changeImage(imgFile);
+                            tile.changeType(typeTranslater());
+                            break;
+                        case "plains":
+                            tile.changeImage(imgFile);
+                            tile.changeType(typeTranslater());
+                            break;
+                        case "mountain":
+                            tile.changeImage(imgFile);
+                            tile.changeType(typeTranslater());
+                            break;
+                        case "road":
+                            changeWithNeighboursRoad(x, y, "road", checkmap);
+                            break;
+                        case "bridge":
+                            changeWithNeighboursRoad(x, y, "bridge", checkmap);
+                            break;
+                        case "sea":
+                            changeWithNeighboursWater(x, y, "sea", checkmap);
+                            break;
+                        default:
+                            System.out.println("Error no valid type set!");
+                            break;
                     }
                     break;
                 }
@@ -222,6 +374,7 @@ public class LevelEditor extends javax.swing.JPanel {
 
             if (e.getSource() == reset){
                 imgFile = "res/tiles/plains.png";
+                curType = "plains";
                 setTiles();
                 repaint();
             }
@@ -242,10 +395,30 @@ public class LevelEditor extends javax.swing.JPanel {
                 repaint();
             }
             String tilepath = "res/tiles/";
-            if (e.getSource() == forest) imgFile = tilepath + "forest.png";
-            if (e.getSource() == plains) imgFile = tilepath + "plains.png";
-            if (e.getSource() == smountain) imgFile = tilepath + "smountain.png";
-            if (e.getSource() == road) imgFile = tilepath + "road.png";
+            if (e.getSource() == forest) {
+                imgFile = tilepath + "forest.png";
+                curType = "forest";
+            }
+            if (e.getSource() == plains) {
+                imgFile = tilepath + "plains.png";
+                curType = "plains";
+            }
+            if (e.getSource() == smountain){
+                imgFile = tilepath + "smountain.png";
+                curType = "mountain";
+            }
+            if (e.getSource() == road){
+                imgFile = tilepath + "road.png";
+                curType = "road";
+            }
+            if (e.getSource() == bridge){
+                imgFile = tilepath + "bridge.png";
+                curType = "bridge";
+            }
+            if(e.getSource() == sea){
+                imgFile = tilepath + "sea.png";
+                curType = "sea";
+            }
         }
 
         private void saveFile(List<List<Tile>> list, String path){
