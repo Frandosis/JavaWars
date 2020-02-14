@@ -40,14 +40,9 @@ public class Tile implements Serializable {
         g.drawImage(img, xpos, ypos, null);
     }
 
-    public void changeImage(String path){
+    public void changeImage(String path)throws IOException{
         File imagebmp = new File(path);
-        try {
-            this.img = ImageIO.read(imagebmp);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        this.img = ImageIO.read(imagebmp);
         this.width = img.getWidth();
         this.height = img.getHeight();
     }
